@@ -2,8 +2,8 @@ import yfinance as yf
 import pandas as pd
 import streamlit as st
 
-# List of Nifty 50 stocks
-nifty50 = [
+# ✅ Nifty 50 Stock Symbols (Yahoo Finance uses .NS for NSE stocks)
+nifty50_symbols = [
     "RELIANCE.NS", "TCS.NS", "INFY.NS", "HDFCBANK.NS", "ICICIBANK.NS",
     "HINDUNILVR.NS", "SBIN.NS", "ITC.NS", "BAJFINANCE.NS", "BHARTIARTL.NS",
     "KOTAKBANK.NS", "LT.NS", "AXISBANK.NS", "ASIANPAINT.NS", "HCLTECH.NS",
@@ -16,19 +16,35 @@ nifty50 = [
     "SBILIFE.NS", "SHREECEM.NS", "ICICIPRULI.NS", "ADANIPORTS.NS", "HINDALCO.NS"
 ]
 
-gainers = []
+# Function to fetch stock details
+def fetch_stock_data():
+    stocks = []
+    for symbol in nifty50_symbols:
+        stock = yf.Ticker(symbol)
+        data = stock.history(period="1d")
 
-for stock in nifty50:
-    data = yf.Ticker(stock).history(period="1d")
-    change = ((data["Close"][-1] - data["Open"][-1]) / data["Open"][-1]) * 100
-    gainers.append((stock, change))
+        # Check if data is available
+        if not data.empty:
+            info = stock.info
+            stocks.append({
+                "Stock": symbol.replace(".NS", ""),
+                "Last Price (₹)": round(data["Close"][-1], 2),
+                "Market Cap (Cr)": round(info.get("marketCap", 0) / 1e7, 2),
+                "Volume": info.get("volume", "N/A"),
+                "52-Week High (₹)": info.get("fiftyTwoWeekHigh", "N/A"),
+                "52-Week Low (₹)": info.get("fiftyTwoWeekLow", "N/A")
+            })
 
-# Sort by % Change
-gainers.sort(key=lambda x: x[1], reverse=True)
+    return pd.DataFrame(stocks)
 
-# Convert to DataFrame
-df = pd.DataFrame(gainers, columns=["Stock", "% Change"])
+# Streamlit UI
+st.title("📈 Nifty 50 Stock Tracker")
 
-# Display in Streamlit
-st.subheader("📈 Top 5 Gainers in Nifty 50")
-st.dataframe(df.head(5))
+# Fetch & Display Data
+df = fetch_stock_data()
+st.dataframe(df)
+
+# Refresh Button
+if st.button("🔄 Refresh Data"):
+    df = fetch_stock_data()
+    st.dataframe(df)
