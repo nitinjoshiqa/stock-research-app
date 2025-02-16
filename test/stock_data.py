@@ -1,7 +1,7 @@
 import yfinance as yf
 import pandas as pd
 
-# ✅ Nifty 50 Stock Symbols
+# ✅ Nifty 50 Stock Symbols (Yahoo Finance uses .NS for NSE stocks)
 nifty50_symbols = [
     "RELIANCE.NS", "TCS.NS", "INFY.NS", "HDFCBANK.NS", "ICICIBANK.NS",
     "HINDUNILVR.NS", "SBIN.NS", "ITC.NS", "BAJFINANCE.NS", "BHARTIARTL.NS",
@@ -22,6 +22,7 @@ def fetch_stock_data():
         stock = yf.Ticker(symbol)
         data = stock.history(period="1d")
 
+        # Check if data is available
         if not data.empty:
             info = stock.info
             stocks.append({
@@ -30,7 +31,8 @@ def fetch_stock_data():
                 "Market Cap (Cr)": round(info.get("marketCap", 0) / 1e7, 2),
                 "Volume": info.get("volume", "N/A"),
                 "52-Week High (₹)": info.get("fiftyTwoWeekHigh", "N/A"),
-                "52-Week Low (₹)": info.get("fiftyTwoWeekLow", "N/A")
+                "52-Week Low (₹)": info.get("fiftyTwoWeekLow", "N/A"),
+                "Change %": round(((data["Close"][-1] - data["Open"][-1]) / data["Open"][-1]) * 100, 2)
             })
 
     return pd.DataFrame(stocks)
