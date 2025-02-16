@@ -1,55 +1,23 @@
-import streamlit as st
 import yfinance as yf
 import pandas as pd
-import matplotlib.pyplot as plt
+import streamlit as st
 
-# Title of the App
-st.title("📈 Stock Research Dashboard")
+# List of Nifty 50 stocks
+nifty50 = ["TCS.NS", "INFY.NS", "HDFCBANK.NS", "RELIANCE.NS", "SBIN.NS"]
 
-# User input: Enter stock symbol
-ticker = st.text_input("Enter Stock Symbol (e.g., TCS.NS, RELIANCE.NS)", "TCS.NS")
+gainers = []
 
-# Fetch Stock Data
-if ticker:
-    stock = yf.Ticker(ticker)
+for stock in nifty50:
+    data = yf.Ticker(stock).history(period="1d")
+    change = ((data["Close"][-1] - data["Open"][-1]) / data["Open"][-1]) * 100
+    gainers.append((stock, change))
 
-    # Display Basic Stock Info
-    info = stock.info
-    st.subheader(f"📊 {info.get('longName', ticker)} Overview")
-    st.write(f"**Sector:** {info.get('sector', 'N/A')}")
-    st.write(f"**Market Cap:** {info.get('marketCap', 'N/A')}")
-    st.write(f"**P/E Ratio:** {info.get('trailingPE', 'N/A')}")
-    st.write(f"**Dividend Yield:** {info.get('dividendYield', 'N/A')}")
-    st.write(f"**52-Week High:** {info.get('fiftyTwoWeekHigh', 'N/A')}")
-    st.write(f"**52-Week Low:** {info.get('fiftyTwoWeekLow', 'N/A')}")
+# Sort by % Change
+gainers.sort(key=lambda x: x[1], reverse=True)
 
-    # Fetch Historical Data
-    st.subheader("📉 Stock Price Chart (Last 6 Months)")
-    data = stock.history(period="6mo")
+# Convert to DataFrame
+df = pd.DataFrame(gainers, columns=["Stock", "% Change"])
 
-    # Plot Closing Price Chart
-    fig, ax = plt.subplots()
-    ax.plot(data.index, data['Close'], label='Close Price', color='blue')
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Price")
-    ax.legend()
-    st.pyplot(fig)
-
-    # Display Financials
-    st.subheader("📊 Key Financials")
-    try:
-        financials = stock.financials.T
-        st.dataframe(financials)
-    except:
-        st.write("Financial data not available.")
-
-    # Show News
-    st.subheader("📰 Latest News")
-    news = stock.news
-    if news:
-        for article in news[:3]:  # Show top 3 articles
-            st.write(f"[{article['title']}]({article['link']})")
-    else:
-        st.write("No recent news available.")
-
-# Run the app: `streamlit run app.py`
+# Display in Streamlit
+st.subheader("📈 Top 5 Gainers in Nifty 50")
+st.dataframe(df.head(5))
