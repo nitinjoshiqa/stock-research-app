@@ -17,3 +17,14 @@ filter_stocks(df)
 
 # Add Refresh Button
 refresh_data(fetch_stock_data)
+st.set_page_config(layout="wide")
+st.data_editor(
+    df,
+    hide_index=True,
+    use_container_width=True,
+    column_config={
+        "Stock": "🏦 Stock",
+        "Last Price (₹)": "💰 Last Price",
+        "Change %": st.column_config.ProgressColumn("📊 Change %", format="%.2f", min_value=-10, max_value=10),
+    }
+)

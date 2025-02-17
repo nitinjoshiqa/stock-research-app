@@ -35,4 +35,5 @@ def fetch_stock_data():
                 "Change %": round(((data["Close"][-1] - data["Open"][-1]) / data["Open"][-1]) * 100, 2)
             })
 
+
     return pd.DataFrame(stocks)
